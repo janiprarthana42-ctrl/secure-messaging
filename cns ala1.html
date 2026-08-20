@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Secure Messaging App - AES + RSA</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #141e30, #243b55);
+            min-height: 100vh;
+            padding: 30px;
+            color: #222;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #243b55;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        .section {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 12px;
+            background: #f5f7fa;
+        }
+
+        .section h2 {
+            color: #243b55;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            resize: vertical;
+            font-size: 15px;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: #243b55;
+        }
+
+        button {
+            border: none;
+            padding: 12px 20px;
+            margin-top: 15px;
+            margin-right: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+            color: white;
+            background: #243b55;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .encrypt {
+            background: #007bff;
+        }
+
+        .decrypt {
+            background: #28a745;
+        }
+
+        .clear {
+            background: #dc3545;
+        }
+
+        .output {
+            margin-top: 15px;
+        }
+
+        .output label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 7px;
+            color: #333;
+        }
+
+        .output textarea {
+            min-height: 90px;
+            background: white;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            background: #e9ecef;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .step {
+            padding: 15px;
+            background: #243b55;
+            color: white;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .step span {
+            display: block;
+            font-size: 25px;
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 700px) {
+            .steps {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>🔐 Secure Messaging Web App</h1>
+
+    <p class="subtitle">
+        AES Symmetric Encryption + RSA Asymmetric Encryption
+    </p>
+
+    <div class="steps">
+        <div class="step">
+            <span>📝</span>
+            Plain Text
+        </div>
+
+        <div class="step">
+            <span>🔑</span>
+            AES Encryption
+        </div>
+
+        <div class="step">
+            <span>🔒</span>
+            RSA Key Protection
+        </div>
+
+        <div class="step">
+            <span>🔓</span>
+            Decryption
+        </div>
+    </div>
+
+    <!-- MESSAGE SECTION -->
+    <div class="section">
+
+        <h2>1. Enter Message</h2>
+
+        <textarea id="plainText"
+            placeholder="Enter your secret message here..."></textarea>
+
+        <button class="encrypt" onclick="encryptMessage()">
+            🔐 Encrypt Message
+        </button>
+
+    </div>
+
+
+    <!-- ENCRYPTED DATA -->
+    <div class="section">
+
+        <h2>2. Encrypted Data</h2>
+
+        <div class="output">
+
+            <label>Encrypted Message (AES-GCM)</label>
+
+            <textarea id="encryptedMessage"
+                readonly
+                placeholder="Encrypted message will appear here..."></textarea>
+
+        </div>
+
+        <div class="output">
+
+            <label>Encrypted AES Key (RSA-OAEP)</label>
+
+            <textarea id="encryptedAESKey"
+                readonly
+                placeholder="Encrypted AES key will appear here..."></textarea>
+
+        </div>
+
+    </div>
+
+
+    <!-- DECRYPTED MESSAGE -->
+    <div class="section">
+
+        <h2>3. Recipient Decryption</h2>
+
+        <button class="decrypt" onclick="decryptMessage()">
+            🔓 Decrypt Message
+        </button>
+
+        <div class="output">
+
+            <label>Decrypted Plain Text</label>
+
+            <textarea id="decryptedMessage"
+                readonly
+                placeholder="Decrypted message will appear here..."></textarea>
+
+        </div>
+
+    </div>
+
+
+    <!-- STATUS -->
+    <div id="status" class="status info">
+        Ready. Enter a message and click Encrypt Message.
+    </div>
+
+
+    <div style="text-align:center;">
+        <button class="clear" onclick="clearAll()">
+            🗑 Clear All
+        </button>
+    </div>
+
+</div>
+
+
+<script>
+
+    // ============================================================
+    // GLOBAL VARIABLES
+    // ============================================================
+
+    let rsaKeyPair = null;
+
+    let encryptedMessageData = null;
+
+    let encryptedAESKeyData = null;
+
+    let aesIVData = null;
+
+
+    // ============================================================
+    // GENERATE RSA KEY PAIR
+    // ============================================================
+
+    async function generateRSAKeys() {
+
+        rsaKeyPair = await window.crypto.subtle.generateKey(
+            {
+                name: "RSA-OAEP",
+                modulusLength: 2048,
+                publicExponent: new Uint8Array([1, 0, 1]),
+                hash: "SHA-256"
+            },
+            true,
+            ["encrypt", "decrypt"]
+        );
+
+        console.log("RSA Key Pair Generated");
+    }
+
+
+    // ============================================================
+    // CONVERT ARRAY BUFFER TO BASE64
+    // ============================================================
+
+    function arrayBufferToBase64(buffer) {
+
+        let binary = "";
+
+        const bytes = new Uint8Array(buffer);
+
+        for (let i = 0; i < bytes.byteLength; i++) {
+
+            binary += String.fromCharCode(bytes[i]);
+
+        }
+
+        return window.btoa(binary);
+    }
+
+
+    // ============================================================
+    // CONVERT BASE64 TO ARRAY BUFFER
+    // ============================================================
+
+    function base64ToArrayBuffer(base64) {
+
+        const binaryString = window.atob(base64);
+
+        const length = binaryString.length;
+
+        const bytes = new Uint8Array(length);
+
+        for (let i = 0; i < length; i++) {
+
+            bytes[i] = binaryString.charCodeAt(i);
+
+        }
+
+        return bytes.buffer;
+    }
+
+
+    // ============================================================
+    // ENCRYPT MESSAGE
+    // ============================================================
+
+    async function encryptMessage() {
+
+        try {
+
+            const plainText =
+                document.getElementById("plainText").value;
+
+            if (plainText.trim() === "") {
+
+                showStatus(
+                    "Please enter a message first.",
+                    "error"
+                );
+
+                return;
+            }
+
+
+            showStatus(
+                "Encrypting message...",
+                "info"
+            );
+
+
+            // ----------------------------------------------------
+            // STEP 1: Generate AES Key
+            // ----------------------------------------------------
+
+            const aesKey =
+                await window.crypto.subtle.generateKey(
+                    {
+                        name: "AES-GCM",
+                        length: 256
+                    },
+                    true,
+                    ["encrypt", "decrypt"]
+                );
+
+
+            // ----------------------------------------------------
+            // STEP 2: Generate Random IV
+            // ----------------------------------------------------
+
+            const iv =
+                window.crypto.getRandomValues(
+                    new Uint8Array(12)
+                );
+
+
+            aesIVData = iv;
+
+
+            // ----------------------------------------------------
+            // STEP 3: Convert Message to Bytes
+            // ----------------------------------------------------
+
+            const encoder = new TextEncoder();
+
+            const messageData =
+                encoder.encode(plainText);
+
+
+            // ----------------------------------------------------
+            // STEP 4: Encrypt Message using AES
+            // ----------------------------------------------------
+
+            const encryptedMessage =
+                await window.crypto.subtle.encrypt(
+                    {
+                        name: "AES-GCM",
+                        iv: iv
+                    },
+                    aesKey,
+                    messageData
+                );
+
+
+            encryptedMessageData =
+                encryptedMessage;
+
+
+            // ----------------------------------------------------
+            // STEP 5: Export AES Key
+            // ----------------------------------------------------
+
+            const rawAESKey =
+                await window.crypto.subtle.exportKey(
+                    "raw",
+                    aesKey
+                );
+
+
+            // ----------------------------------------------------
+            // STEP 6: Encrypt AES Key using RSA Public Key
+            // ----------------------------------------------------
+
+            encryptedAESKeyData =
+                await window.crypto.subtle.encrypt(
+                    {
+                        name: "RSA-OAEP"
+                    },
+                    rsaKeyPair.publicKey,
+                    rawAESKey
+                );
+
+
+            // ----------------------------------------------------
+            // STEP 7: Display Encrypted Data
+            // ----------------------------------------------------
+
+            document.getElementById(
+                "encryptedMessage"
+            ).value =
+                arrayBufferToBase64(encryptedMessage);
+
+
+            document.getElementById(
+                "encryptedAESKey"
+            ).value =
+                arrayBufferToBase64(encryptedAESKeyData);
+
+
+            showStatus(
+                "Message encrypted successfully using AES. AES key secured using RSA.",
+                "success"
+            );
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+            showStatus(
+                "Encryption failed: " + error.message,
+                "error"
+            );
+
+        }
+
+    }
+
+
+    // ============================================================
+    // DECRYPT MESSAGE
+    // ============================================================
+
+    async function decryptMessage() {
+
+        try {
+
+            if (
+                !encryptedMessageData ||
+                !encryptedAESKeyData
+            ) {
+
+                showStatus(
+                    "Please encrypt a message first.",
+                    "error"
+                );
+
+                return;
+            }
+
+
+            showStatus(
+                "Decrypting message...",
+                "info"
+            );
+
+
+            // ----------------------------------------------------
+            // STEP 1: RSA Decryption
+            // Recover AES Key
+            // ----------------------------------------------------
+
+            const decryptedAESKey =
+                await window.crypto.subtle.decrypt(
+                    {
+                        name: "RSA-OAEP"
+                    },
+                    rsaKeyPair.privateKey,
+                    encryptedAESKeyData
+                );
+
+
+            // ----------------------------------------------------
+            // STEP 2: Import Recovered AES Key
+            // ----------------------------------------------------
+
+            const aesKey =
+                await window.crypto.subtle.importKey(
+                    "raw",
+                    decryptedAESKey,
+                    {
+                        name: "AES-GCM"
+                    },
+                    false,
+                    ["decrypt"]
+                );
+
+
+            // ----------------------------------------------------
+            // STEP 3: AES Decryption
+            // ----------------------------------------------------
+
+            const decryptedMessage =
+                await window.crypto.subtle.decrypt(
+                    {
+                        name: "AES-GCM",
+                        iv: aesIVData
+                    },
+                    aesKey,
+                    encryptedMessageData
+                );
+
+
+            // ----------------------------------------------------
+            // STEP 4: Convert Bytes to Text
+            // ----------------------------------------------------
+
+            const decoder = new TextDecoder();
+
+            const plainText =
+                decoder.decode(decryptedMessage);
+
+
+            // ----------------------------------------------------
+            // STEP 5: Display Plain Text
+            // ----------------------------------------------------
+
+            document.getElementById(
+                "decryptedMessage"
+            ).value = plainText;
+
+
+            showStatus(
+                "Message decrypted successfully! Original message recovered.",
+                "success"
+            );
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+            showStatus(
+                "Decryption failed: " + error.message,
+                "error"
+            );
+
+        }
+
+    }
+
+
+    // ============================================================
+    // STATUS MESSAGE
+    // ============================================================
+
+    function showStatus(message, type) {
+
+        const status =
+            document.getElementById("status");
+
+        status.textContent = message;
+
+        status.className =
+            "status " + type;
+
+    }
+
+
+    // ============================================================
+    // CLEAR EVERYTHING
+    // ============================================================
+
+    function clearAll() {
+
+        document.getElementById(
+            "plainText"
+        ).value = "";
+
+        document.getElementById(
+            "encryptedMessage"
+        ).value = "";
+
+        document.getElementById(
+            "encryptedAESKey"
+        ).value = "";
+
+        document.getElementById(
+            "decryptedMessage"
+        ).value = "";
+
+
+        encryptedMessageData = null;
+
+        encryptedAESKeyData = null;
+
+        aesIVData = null;
+
+
+        showStatus(
+            "All data cleared. Enter a new message.",
+            "info"
+        );
+
+    }
+
+
+    // ============================================================
+    // START APPLICATION
+    // ============================================================
+
+    window.onload = async function () {
+
+        try {
+
+            await generateRSAKeys();
+
+            showStatus(
+                "RSA-2048 key pair generated. Application is ready.",
+                "success"
+            );
+
+        }
+
+        catch (error) {
+
+            showStatus(
+                "Unable to generate RSA keys.",
+                "error"
+            );
+
+            console.error(error);
+
+        }
+
+    };
+
+</script>
+
+</body>
+</html>
